@@ -1,0 +1,17 @@
+This file adds following functionality:
+
+  perl5.def		- May be used to build binary-compatibility DLLs
+				for binary compatible with 5.8.2 versions of
+				Perl (so one can use Perl XS modules built
+				for 5.8.2)
+  perl5.def-5_5_53	- Same for version 5.005_53
+  perl___*.exe		- Flavors of perl___.exe with lowered stack (0.3M
+				to 8M); may be useful in tight memory
+				situations (such as floppy boot);
+  perl312F.map		- may (?) be useful to debug perl executables
+			  from the binary distribution.
+
+  5_5_53.582/*		- Binary compatibility DLL for XS extensions
+				built for 5.005_53 to be useful (?) with
+				5.8.2.  See README file there.
+					[Mostly for OpenGL and Tk.]

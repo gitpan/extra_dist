@@ -1,0 +1,41 @@
+This is a shim DLL to try to use extensions compiled for v 5.005_53 with this
+release of Perl.  (Since all modules in the main binary distribution of
+5.005_53 are present in the binary distribution of 5.8.2, the usability is
+mainly for "additional" modules: Tk and OpenGL; do not forget that for
+best results one should start them as PM programs, i.e., via perl__.)
+
+Since there is no full binary compatibility between these version, some (or a
+lot) of functionality can be lost.  E.g., since the filehandles have no binary
+compatibility at all, if an extension accesses Perl filehandles from XS code,
+this can lead to a lot of trouble (segfault?).
+
+To create this shim DLL, I needed to update the procedure documented
+in perlos2 by
+
+  perl -wnle "next if 0../EXPORTS/; print qq(  \"$1\") if /\"(\w+)\"/" perl5.def-5_5_53  >lst-old
+  perl -wnle "next if 0../EXPORTS/; print qq(  \"$1\") if /\"(\w+)\"/" perl5.def >lst1
+
+  sort lst-old lst1 | uniq -d >lst
+  perl -wne "BEGIN{open F, 'lst1' or die; /\"(\w+)\"/ and $ss{lc $_}=$1 and ++$s{$_} for <F>} next unless $ss{lc $_} and not $s{$_}; s/$/=\"$ss{$_}\"/; print" lst-old >>lst
+  echo "Perl_sharepvn"="Perl__sharepvn" >> lst
+
+  gcc -c do_shim.c -Zomf
+  ...
+  gcc -Zomf -Zdll -o perlE0AC.dll perl5shim.def -s do_shim.obj -llibperl
+
+=========================
+See perlos2/"DLL name mangling: 5.6.2 and beyond" for details why this DLL
+is needed..
+
+Note that you can set PERL_PRE_BEGINLIBPATH to "~dll/5_5_53.582", install
+this DLL in the directory $PERL_DLL_DIR/5_5_53.582, and have a way to
+run both Perl 5.005_53 and Perl 5.8.2 WITH extensions of 5.005_53.
+See docs (section perlos2delta) for details why
+  set LIBPATHSTRICT=T
+is needed.
+
+=========================
+Note that due to a buglet in a build process of 5.8.2, the function
+Perl_share_hek() is not exported from the main DLL.  Thus we needed to
+implement Perl_sharepvn() in a leaky way.  I hope that the memory leak
+is negligeable...
